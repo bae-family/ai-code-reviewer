@@ -18,7 +18,7 @@ inputs:
     description: "Slack Webhook URL (선택사항, 알림용)"
     required: false
 runs:
-  using: "node22"
+  using: "node20"
   main: "action/index.js"
 outputs:
   ai_response:
