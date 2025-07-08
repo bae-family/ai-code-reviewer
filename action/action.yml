@@ -1,0 +1,19 @@
+name: "GPT Code Review (TS)"
+description: "Push 이벤트로 동작하는 OpenAI 기반 코드 리뷰 액션"
+inputs:
+  openai-key:
+    description: "OpenAI API Key"
+    required: true
+  repo-token:
+    description: "GitHub Token"
+    required: true
+  model:
+    description: "OpenAI 모델 (기본: gpt-3.5-turbo)"
+    required: false
+    default: "gpt-3.5-turbo"
+runs:
+  using: "node22"
+  main: "index.js"
+outputs:
+  ai_response:
+    description: "AI가 생성한 코드 리뷰 텍스트"
