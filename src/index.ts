@@ -61,17 +61,19 @@ async function run() {
         const review = completion.choices[0].message!.content;
         core.setOutput('ai_response', review);
 
-        try {
-            const response = await axios.post(slackWebhookUrl, {
-                text: `AI Code Review:\n\n${review}`,
-            });
+        if (slackWebhookUrl) {
+            try {
+                const response = await axios.post(slackWebhookUrl, {
+                    text: `AI Code Review:\n\n${review}`,
+                });
 
-            if (response.status !== 200) {
-                throw new Error(`Slack 메시지 전송 실패: ${response.statusText}`);
+                if (response.status !== 200) {
+                    throw new Error(`Slack 메시지 전송 실패: ${response.statusText}`);
+                }
+                core.info('Slack 메시지 전송 성공');
+            } catch (error: any) {
+                core.warning(`Slack 메시지 전송 실패: ${error.message}`);
             }
-            core.info('Slack 메시지 전송 성공');
-        } catch (error: any) {
-            core.warning(`Slack 메시지 전송 실패: ${error.message}`);
         }
     } catch (error: any) {
         core.setFailed(error.message);
