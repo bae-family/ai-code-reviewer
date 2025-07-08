@@ -1,0 +1,21 @@
+name: Test AI Code Review on Push
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - 'docs/**'
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Run AI Code Review (TS)
+        uses: ./action
+        with:
+          openai-key: ${{ secrets.OPENAI_API_KEY }}
+          repo-token:  ${{ secrets.GITHUB_TOKEN }}
+          slack-webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}

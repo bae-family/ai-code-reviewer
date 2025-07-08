@@ -11,6 +11,9 @@ inputs:
     description: "OpenAI 모델 (기본: gpt-3.5-turbo)"
     required: false
     default: "gpt-3.5-turbo"
+  slack-webhook-url:
+    description: "Slack Webhook URL (알림용)"
+    required: true
 runs:
   using: "node22"
   main: "index.js"
