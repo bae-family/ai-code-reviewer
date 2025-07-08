@@ -1,5 +1,8 @@
 name: "GPT Code Review (TS)"
 description: "Push 이벤트로 동작하는 OpenAI 기반 코드 리뷰 액션"
+branding:
+  icon: 'check'
+  color: 'blue'
 inputs:
   openai-key:
     description: "OpenAI API Key"
