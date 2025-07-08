@@ -16,7 +16,7 @@ inputs:
     required: true
 runs:
   using: "node22"
-  main: "index.js"
+  main: "action/index.js"
 outputs:
   ai_response:
     description: "AI가 생성한 코드 리뷰 텍스트"

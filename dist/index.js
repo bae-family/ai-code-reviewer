@@ -39,12 +39,14 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const core = __importStar(require("@actions/core"));
 const github = __importStar(require("@actions/github"));
 const openai_1 = __importDefault(require("openai"));
+const axios_1 = __importDefault(require("axios"));
 async function run() {
     try {
         // 입력값
         const openaiKey = core.getInput('openai-key', { required: true });
         const model = core.getInput('model') || 'gpt-3.5-turbo';
         const token = core.getInput('repo-token', { required: true });
+        const slackWebhookUrl = core.getInput('slack-webhook-url', { required: true });
         // OpenAI 클라이언트
         const openai = new openai_1.default({
             apiKey: openaiKey,
@@ -78,8 +80,8 @@ async function run() {
         }
         // OpenAI ChatCompletion 호출
         const messages = [
-            { role: 'system', content: 'You are an expert code reviewer.' },
-            { role: 'user', content: patches }
+            { role: 'system', content: '당신은 전문 코드 리뷰어 입니다. 따라오는 DIFF를 코드 리뷰하고 반드시 한글로 답해주세요.' },
+            { role: 'user', content: patches },
         ];
         const completion = await openai.chat.completions.create({
             model,
@@ -87,7 +89,18 @@ async function run() {
         });
         const review = completion.choices[0].message.content;
         core.setOutput('ai_response', review);
-        // (옵션) Slack 알림 등 후속 처리
+        try {
+            const response = await axios_1.default.post(slackWebhookUrl, {
+                text: `AI Code Review:\n\n${review}`,
+            });
+            if (response.status !== 200) {
+                throw new Error(`Slack 메시지 전송 실패: ${response.statusText}`);
+            }
+            core.info('Slack 메시지 전송 성공');
+        }
+        catch (error) {
+            core.warning(`Slack 메시지 전송 실패: ${error.message}`);
+        }
     }
     catch (error) {
         core.setFailed(error.message);
