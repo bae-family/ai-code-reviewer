@@ -10,6 +10,7 @@
   "dependencies": {
     "@actions/core": "^1.10.0",
     "@actions/github": "^6.0.1",
+    "axios": "^1.10.0",
     "openai": "^4.80.1"
   },
   "devDependencies": {
