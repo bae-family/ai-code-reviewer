@@ -52,6 +52,11 @@ async function run() {
             });
         const fullReviewInput = fullFiles.join("\n\n");
 
+        // 리포지토리 이름과 수정된 파일 목록 준비
+        const repoFullName = `${repo.owner}/${repo.repo}`;
+        const modifiedFiles = response.data.files.map(f => f.filename).filter(Boolean).join(', ');
+        const userContent = `리포지토리: ${repoFullName}\n수정된 파일: ${modifiedFiles}\n\n${fullReviewInput}`;
+
         if (!patches) {
             core.info('변경된 파일이 없습니다.');
             return;
@@ -63,7 +68,7 @@ async function run() {
                 role: 'system',
                 content: '당신은 전문 코드 리뷰어입니다. 다음 변경사항 중에서 반드시 수정해야 하는 치명적 이슈(예: WHERE 절 누락, 반복문 내 중복 쿼리, 보안 취약점, 논리적 오류 등)만 한글로 보고하세요. 스타일, 권장 관례, 가벼운 제안이나 요약은 언급하지 마십시오. 답변할때는 수정된 레포지토리의 이름과 파일명을 모두 언급해주세요.'
             },
-            { role: 'user', content: fullReviewInput },
+            { role: 'user', content: userContent },
         ];
 
         const completion = await openai.chat.completions.create({
