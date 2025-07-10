@@ -40,6 +40,7 @@ const core = __importStar(require("@actions/core"));
 const github = __importStar(require("@actions/github"));
 const openai_1 = __importDefault(require("openai"));
 const axios_1 = __importDefault(require("axios"));
+const fs = __importStar(require("fs"));
 async function run() {
     try {
         // 입력값
@@ -74,6 +75,14 @@ async function run() {
             .filter(f => f.patch)
             .map(f => `===== ${f.filename} =====\n${f.patch}`)
             .join('\n\n');
+        // 변동된 파일 전체 내용 읽기
+        const fullFiles = response.data.files
+            .filter(f => f.filename && fs.existsSync(f.filename))
+            .map(f => {
+            const content = fs.readFileSync(f.filename, "utf8");
+            return `===== ${f.filename} =====\n${content}`;
+        });
+        const fullReviewInput = fullFiles.join("\n\n");
         if (!patches) {
             core.info('변경된 파일이 없습니다.');
             return;
@@ -82,9 +91,9 @@ async function run() {
         const messages = [
             {
                 role: 'system',
-                content: '당신은 전문 코드 리뷰어입니다. 다음 DIFF에서 반드시 수정해야 하는 치명적 이슈(예: WHERE 절 누락, 반복문 내 중복 쿼리, 보안 취약점, 논리적 오류 등)만 한글로 보고하세요. 스타일, 권장 관례, 가벼운 제안이나 요약은 언급하지 마십시오.'
+                content: '당신은 전문 코드 리뷰어입니다. 다음 변경사항 중에서 반드시 수정해야 하는 치명적 이슈(예: WHERE 절 누락, 반복문 내 중복 쿼리, 보안 취약점, 논리적 오류 등)만 한글로 보고하세요. 스타일, 권장 관례, 가벼운 제안이나 요약은 언급하지 마십시오.'
             },
-            { role: 'user', content: patches },
+            { role: 'user', content: fullReviewInput },
         ];
         const completion = await openai.chat.completions.create({
             model,
