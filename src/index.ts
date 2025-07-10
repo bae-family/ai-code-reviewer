@@ -49,7 +49,10 @@ async function run() {
 
         // OpenAI ChatCompletion 호출
         const messages: ChatCompletionMessageParam[] = [
-            { role: 'system', content: '당신은 전문 코드 리뷰어 입니다. 따라오는 DIFF를 코드 리뷰하고 반드시 한글로 답해주세요.' },
+            {
+                role: 'system',
+                content: '당신은 전문 코드 리뷰어입니다. 다음 DIFF에서 반드시 수정해야 하는 치명적 이슈(예: WHERE 절 누락, 반복문 내 중복 쿼리, 보안 취약점, 논리적 오류 등)만 한글로 보고하세요. 스타일, 권장 관례, 가벼운 제안이나 요약은 언급하지 마십시오.'
+            },
             { role: 'user', content: patches },
         ];
 
