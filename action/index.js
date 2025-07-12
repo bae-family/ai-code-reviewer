@@ -1263,7 +1263,10 @@ async function run() {
         // 리포지토리 이름과 수정된 파일 목록 준비
         const repoFullName = `${repo.owner}/${repo.repo}`;
         const modifiedFiles = response.data.files.map(f => f.filename).filter(Boolean).join(', ');
-        const userContent = `리포지토리: ${repoFullName}\n수정된 파일: ${modifiedFiles}\n\n${fullReviewInput}`;
+        const userContent = `레포지토리: ${repoFullName}\n` +
+            `수정된 파일: ${modifiedFiles}\n\n` +
+            `=== DIFF ===\n${patches}\n\n` +
+            `=== 전체 파일 내용 ===\n${fullReviewInput}`;
         if (!patches) {
             core.info('변경된 파일이 없습니다.');
             return;
@@ -1272,7 +1275,7 @@ async function run() {
         const messages = [
             {
                 role: 'system',
-                content: '당신은 전문 코드 리뷰어입니다. 다음 변경사항 중에서 반드시 수정해야 하는 치명적 이슈(예: WHERE 절 누락, 반복문 내 중복 쿼리, 보안 취약점, 논리적 오류 등)만 한글로 보고하세요. 스타일, 권장 관례, 가벼운 제안이나 요약은 언급하지 마십시오. 답변할때는 수정된 레포지토리의 이름과 파일명을 모두 언급해주세요.'
+                content: '당신은 전문 코드 리뷰어입니다. 다음 변경사항 중에서 적용된 내용을 간략하게 설명하고 반드시 수정해야 하는 치명적 이슈(예: WHERE 절 누락, 반복문 내 중복 쿼리, 보안 취약점, 논리적 오류 등)만 한글로 보고하세요. 스타일, 권장 관례, 가벼운 제안은 언급하지 마십시오. 치명적인 문제를 언급할때에는 수정된 파일과 라인 번호를 반드시 정확하게 입력하여 주십시오. 제안하고 싶은 전체 소스를 제공할 필요는 없습니다. 간략하게 설명해주면 됩니다. 당신의 응답은 기획자와 해당 작업을 담당한 개발자, 동료 개발자들이 모두 보게되는 점을 염두에 두세요.'
             },
             { role: 'user', content: userContent },
         ];
