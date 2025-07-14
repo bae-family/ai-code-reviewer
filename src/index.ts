@@ -67,7 +67,7 @@ async function run() {
         }
 
         // OpenAI ChatCompletion 호출
-        const messages: ChatCompletionMessageParam[] = [
+        const defaultMessages: ChatCompletionMessageParam[] = [
             {
                 role: 'system',
                 content: '당신은 전문 코드 리뷰어입니다.' +
@@ -125,13 +125,28 @@ async function run() {
                     '- 의도를 파악할 수 있게 주석을 추가합니다.  \n' +
                     '- 위와 같은 리팩토링을 통해 *코드 효율성*, *가독성*, *견고성*이 향상됩니다.'
             },
-            { role: 'user', content: userContent },
         ];
+        let messages = defaultMessages;
+        messages.push({ role: 'user', content: userContent });
 
-        const completion = await openai.chat.completions.create({
-            model,
-            messages,
-        });
+        const systemPrompt = messages[0];
+        let completion;
+        try {
+            completion = await openai.chat.completions.create({ model, messages });
+        } catch (error: any) {
+            if (
+                (error.status === 429 && error.message.includes('Request too large')) ||
+                error.message.toLowerCase().includes('token limit')
+            ) {
+                core.warning('토큰 제한 초과, DIFF만 사용하여 재시도합니다.');
+
+                let messages = defaultMessages;
+                messages.push({ role: 'user', content: `리포지토리: ${repoFullName}\n수정된 파일: ${modifiedFiles}\n\n=== DIFF ===\n${patches}` });
+                completion = await openai.chat.completions.create({ model, messages: messages });
+            } else {
+                throw error;
+            }
+        }
 
         const review = completion.choices[0].message!.content;
         core.setOutput('ai_response', review);
