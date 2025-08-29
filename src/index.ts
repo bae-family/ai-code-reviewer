@@ -5,6 +5,8 @@ import { ChatCompletionMessageParam } from "openai/resources/chat/completions/co
 import axios from "axios";
 import * as fs from "fs";
 
+const isReviewableFile = (filename: string) => /\.(php|js|html)$/i.test(filename);
+
 async function run() {
     try {
         // 입력값
@@ -38,15 +40,21 @@ async function run() {
         });
 
         if (!response?.data || !response.data?.files) return;
-        const patches = response.data.files
-            .filter(f => f.patch)
-            .map(f => `===== ${f.filename} =====\n${f.patch}`)
+
+        // 리뷰 대상 확장자만 필터링 (php, js, html)
+        const reviewableFiles = response.data.files.filter(
+            (f: any) => f.filename && isReviewableFile(f.filename)
+        );
+
+        const patches = reviewableFiles
+            .filter((f: any) => f.patch)
+            .map((f: any) => `===== ${f.filename} =====\n${f.patch}`)
             .join('\n\n');
 
-        // 변동된 파일 전체 내용 읽기
-        const fullFiles: string[] = response.data.files
-            .filter(f => f.filename && fs.existsSync(f.filename))
-            .map(f => {
+        // 변동된 파일 전체 내용 읽기 (php/js/html만)
+        const fullFiles: string[] = reviewableFiles
+            .filter((f: any) => f.filename && fs.existsSync(f.filename))
+            .map((f: any) => {
                 const content = fs.readFileSync(f.filename, "utf8");
                 return `===== ${f.filename} =====\n${content}`;
             });
@@ -54,7 +62,7 @@ async function run() {
 
         // 리포지토리 이름과 수정된 파일 목록 준비
         const repoFullName = `${repo.owner}/${repo.repo}`;
-        const modifiedFiles = response.data.files.map(f => f.filename).filter(Boolean).join(', ');
+        const modifiedFiles = reviewableFiles.map((f: any) => f.filename).filter(Boolean).join(', ');
         const userContent =
             `레포지토리: ${repoFullName}\n` +
             `수정된 파일: ${modifiedFiles}\n\n` +
@@ -62,7 +70,7 @@ async function run() {
             `=== 전체 파일 내용 ===\n${fullReviewInput}`;
 
         if (!patches) {
-            core.info('변경된 파일이 없습니다.');
+            core.info('리뷰 대상(php/js/html) 변경 파일이 없습니다.');
             return;
         }
         const systemPrompt: ChatCompletionMessageParam = {
