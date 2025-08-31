@@ -72,8 +72,10 @@ async function run() {
         });
         if (!response?.data || !response.data?.files)
             return;
-        // 리뷰 대상 확장자만 필터링 (php, js, html)
-        const reviewableFiles = response.data.files.filter((f) => f.filename && isReviewableFile(f.filename));
+        // 리뷰 대상 확장자만 필터링 (php, js, html) 및 dist/ 디렉토리 제외
+        const reviewableFiles = response.data.files.filter((f) => f.filename &&
+            isReviewableFile(f.filename) &&
+            !f.filename.startsWith("dist/"));
         const patches = reviewableFiles
             .filter((f) => f.patch)
             .map((f) => `===== ${f.filename} =====\n${f.patch}`)
